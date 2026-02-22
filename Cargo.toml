@@ -14,3 +14,4 @@ name = "zero2prod"
 actix-web = "4"
 tokio = { version = "1.49.0", features = ["full"] }
 reqwest = "0.13.2"
+serde = { version = "1.0.228", features = ["derive"] }

@@ -1,27 +1,35 @@
-use std::io::Error;
+use std::{io::Error, net::TcpListener};
 
-use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Responder, dev::Server, web};
+use actix_web::{
+    App, HttpResponse, HttpServer,
+    dev::Server,
+    web::{self, Form},
+};
 
-pub fn run() -> Result<Server, Error> {
+pub fn run(listener: TcpListener) -> Result<Server, Error> {
     let server = HttpServer::new(|| {
         App::new().service(
             web::scope("/v1")
-                .route("/", web::get().to(great))
                 .route("/health-check", web::get().to(health_check))
-                .route("/{name}", web::get().to(great)),
+                .route("/subscriptions", web::post().to(subscription)),
         )
     })
-    .bind("0.0.0.0:8000")?
+    .listen(listener)?
     .run();
 
     Ok(server)
 }
 
-async fn great(request: HttpRequest) -> impl Responder {
-    let name = request.match_info().get("name").unwrap_or("ze");
-    format!("Hello {name}")
+async fn health_check() -> HttpResponse {
+    HttpResponse::Ok().finish()
 }
 
-async fn health_check() -> impl Responder {
+#[derive(serde::Deserialize, Debug)]
+struct SubscriptionForm {
+    email: String,
+    name: String,
+}
+
+async fn subscription(_form: Form<SubscriptionForm>) -> HttpResponse {
     HttpResponse::Ok().finish()
 }
