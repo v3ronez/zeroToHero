@@ -31,7 +31,6 @@ async fn subscriber_returns_a_200_for_valid_form_data() {
         .await
         .expect("Failed to execute request.");
 
-    dbg!(&response.status());
     assert!(response.status().is_success());
 }
 
