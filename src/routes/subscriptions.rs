@@ -1,4 +1,8 @@
-use actix_web::{HttpResponse, web::Form};
+use actix_web::{
+    HttpResponse,
+    web::{Data, Form},
+};
+use sqlx::PgConnection;
 
 #[derive(serde::Deserialize, Debug)]
 pub struct SubscriptionForm {
@@ -6,6 +10,9 @@ pub struct SubscriptionForm {
     name: String,
 }
 
-pub async fn subscription(_form: Form<SubscriptionForm>) -> HttpResponse {
+pub async fn subscription(
+    _form: Form<SubscriptionForm>,
+    _connection: Data<PgConnection>,
+) -> HttpResponse {
     HttpResponse::Ok().finish()
 }

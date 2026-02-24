@@ -1,6 +1,7 @@
 use std::net::TcpListener;
 
-use zero2prod::startup::run;
+use sqlx::{Connection, PgConnection};
+use zero2prod::{configuration::get_configuration, startup::run};
 
 #[tokio::test]
 async fn health_check() {
@@ -21,6 +22,13 @@ async fn health_check() {
 async fn subscriber_returns_a_200_for_valid_form_data() {
     let app_address = spawn_app();
     let url = format!("{app_address}/v1/subscriptions");
+    let configuration = get_configuration().expect("Failed to read configuration");
+    let connection_string = configuration.database.connection_string();
+
+    let mut connection = PgConnection::connect(&connection_string)
+        .await
+        .expect("Failed to establish new connection");
+
     let client = reqwest::Client::new();
     let body = "name=le%20guin&email=usrsula_le_guin%40gmail.com";
     let response = client
@@ -31,7 +39,14 @@ async fn subscriber_returns_a_200_for_valid_form_data() {
         .await
         .expect("Failed to execute request.");
 
+    let saved = sqlx::query!("SELECT email, name FROM subscriptions")
+        .fetch_one(&mut connection)
+        .await
+        .expect("Failed to fetch saved subscription");
+
     assert!(response.status().is_success());
+    assert_eq!(saved.email, "ursula_le_guin@gmail.com");
+    assert_eq!(saved.name, "le guin");
 }
 
 #[tokio::test]

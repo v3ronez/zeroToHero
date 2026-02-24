@@ -1,5 +1,6 @@
 use std::{io::Result, net::TcpListener};
 
+use sqlx::{Connection, PgConnection};
 use zero2prod::{configuration, startup::run};
 
 #[tokio::main]
@@ -8,5 +9,9 @@ async fn main() -> Result<()> {
     let port = configuration.application_port;
     let address = format!("127.0.0.1:{}", port);
     let listener = TcpListener::bind(address).expect("Error to bind the 8000 port");
-    run(listener)?.await
+    let connection = PgConnection::connect(&configuration.database.connection_string())
+        .await
+        .expect("Failed to establish new connection on Postgres.");
+
+    run(listener, connection)?.await
 }
